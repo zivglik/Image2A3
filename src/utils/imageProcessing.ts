@@ -26,15 +26,14 @@ export const calculateImageDimensions = (imageWidth: number, imageHeight: number
   }
 
   if (isLandscape) {
-    // תמונות רוחב - לסובב 90 מעלות
-    // אחרי הסיבוב: הרוחב המקורי הופך לגובה והגובה המקורי הופך לרוחב
-    const rotatedAspectRatio = imageHeight / imageWidth; // היחס החדש אחרי הסיבוב
+
+
+    const rotatedAspectRatio = imageHeight / imageWidth;
     
-    // קודם מנסים למתוח לגובה מקסימלי
     let rotatedHeight = CELL_HEIGHT;
     let rotatedWidth = rotatedHeight * rotatedAspectRatio;
 
-    // אם הרוחב גדול מדי אחרי הסיבוב, מתאימים לרוחב התא
+
     if (rotatedWidth > CELL_WIDTH) {
       rotatedWidth = CELL_WIDTH;
       rotatedHeight = rotatedWidth / rotatedAspectRatio;
@@ -47,14 +46,13 @@ export const calculateImageDimensions = (imageWidth: number, imageHeight: number
     };
   }
 
-  // תמונות אורך (פורטרט)
-  // קודם מותחים לגובה המקסימלי
+
   const maxHeight = CELL_HEIGHT;
   
-  // מחשבים את הרוחב הדרוש לפי היחס המקורי
+
   let width = maxHeight * aspectRatio;
   
-  // אם הרוחב גדול מרוחב התא, נקטין את שניהם ביחס
+
   if (width > CELL_WIDTH) {
     const scale = CELL_WIDTH / width;
     width = CELL_WIDTH;
@@ -65,7 +63,7 @@ export const calculateImageDimensions = (imageWidth: number, imageHeight: number
     };
   }
   
-  // אם הרוחב קטן מרוחב התא, מותחים לרוחב התא
+
   if (width < CELL_WIDTH) {
     width = CELL_WIDTH;
   }
@@ -88,18 +86,18 @@ export const drawRotatedImage = (
   const processingCanvas = document.createElement('canvas');
   const processingCtx = processingCanvas.getContext('2d')!;
   
-  // מגדיר את ממדי הקנבס לפי הממדים הסופיים הרצויים
+
   processingCanvas.width = width;
   processingCanvas.height = height;
   
-  // מסובב את התמונה סביב הנקודה המרכזית
+
   processingCtx.translate(width/2, height/2);
   processingCtx.rotate(Math.PI / 2);
   processingCtx.translate(-height/2, -width/2);
   
-  // מצייר את התמונה המקורית
+
   processingCtx.drawImage(image, 0, 0, height, width);
   
-  // מצייר את התמונה המסובבת על הקנבס הראשי
+
   ctx.drawImage(processingCanvas, x, y);
 }; 
