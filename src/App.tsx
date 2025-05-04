@@ -181,6 +181,29 @@ function App() {
     document.body.removeChild(link);
   };
 
+  const handleSaveAllAsPNG = () => {
+    const now = new Date();
+    const dateStr = now.toISOString()
+      .replace(/[:.]/g, '-')
+      .replace('T', '_')
+      .slice(0, 19);
+
+    // Save each canvas with a slight delay to prevent browser blocking
+    canvasRefs.current.forEach((canvas, index) => {
+      if (!canvas) return;
+      
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.download = `print-layout-${index + 1}_${dateStr}.png`;
+        link.href = canvas.toDataURL('image/png', 1.0);
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, index * 100); // 100ms delay between each save
+    });
+  };
+
   const renderCanvas = (index: number) => {
     return (
       <Box key={index} sx={{ mb: 4 }}>
@@ -250,6 +273,19 @@ function App() {
             </Button>
           </label>
         </Box>
+
+        {images.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Button 
+              variant="contained" 
+              color="secondary"
+              onClick={handleSaveAllAsPNG}
+              sx={{ mb: 2 }}
+            >
+              שמור את כל העמודים כ-PNG
+            </Button>
+          </Box>
+        )}
 
         {Array.from({ length: numberOfCanvases }, (_, i) => renderCanvas(i))}
       </Box>
