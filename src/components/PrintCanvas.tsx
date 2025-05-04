@@ -1,0 +1,134 @@
+import React, { forwardRef, useImperativeHandle } from 'react';
+import { Box, Button, Typography } from '@mui/material';
+import { ImageData } from '../types/image';
+import { A3_WIDTH, A3_HEIGHT, CELL_WIDTH, CELL_HEIGHT, GRID_COLS } from '../constants/dimensions';
+import { calculateImageDimensions, drawRotatedImage } from '../utils/imageProcessing';
+
+export interface PrintCanvasRef {
+  getPrintCanvas: () => HTMLCanvasElement | null;
+}
+
+interface PrintCanvasProps {
+  index: number;
+  images: ImageData[];
+  onPrint: (index: number) => void;
+  onSaveAsPNG: (index: number) => void;
+}
+
+const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ index, images, onPrint, onSaveAsPNG }, ref) => {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const previewCanvasRef = React.useRef<HTMLCanvasElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    getPrintCanvas: () => canvasRef.current
+  }));
+
+  const drawOnCanvas = (
+    canvas: HTMLCanvasElement,
+    ctx: CanvasRenderingContext2D,
+    images: ImageData[],
+    scale: number = 1
+  ) => {
+    // Clear canvas
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Calculate scaled dimensions
+    const scaledCellWidth = CELL_WIDTH * scale;
+    const scaledCellHeight = CELL_HEIGHT * scale;
+
+    images.forEach((image, index) => {
+      const col = index % GRID_COLS;
+      const row = Math.floor(index / GRID_COLS);
+      
+      const x = col * scaledCellWidth;
+      const y = row * scaledCellHeight;
+
+      const { width: originalWidth, height: originalHeight, shouldRotate } = calculateImageDimensions(image.width, image.height);
+      
+      // Scale the dimensions
+      const width = originalWidth * scale;
+      const height = originalHeight * scale;
+      
+      const centerX = x + (scaledCellWidth - width) / 2;
+      const centerY = y + (scaledCellHeight - height) / 2;
+
+      if (shouldRotate) {
+        drawRotatedImage(ctx, image.element, centerX, centerY, width, height);
+      } else {
+        ctx.drawImage(image.element, centerX, centerY, width, height);
+      }
+    });
+  };
+
+  React.useEffect(() => {
+    // Draw on print canvas
+    const printCanvas = canvasRef.current;
+    const printCtx = printCanvas?.getContext('2d');
+    if (printCanvas && printCtx) {
+      printCanvas.width = A3_WIDTH;
+      printCanvas.height = A3_HEIGHT;
+      drawOnCanvas(printCanvas, printCtx, images, 1);
+    }
+
+    // Draw on preview canvas
+    const previewCanvas = previewCanvasRef.current;
+    const previewCtx = previewCanvas?.getContext('2d');
+    if (previewCanvas && previewCtx) {
+      const scale = Math.min(
+        previewCanvas.width / A3_WIDTH,
+        previewCanvas.height / A3_HEIGHT
+      );
+      
+      const scaledWidth = A3_WIDTH * scale;
+      const scaledHeight = A3_HEIGHT * scale;
+      
+      previewCanvas.width = scaledWidth;
+      previewCanvas.height = scaledHeight;
+      
+      drawOnCanvas(previewCanvas, previewCtx, images, scale);
+    }
+  }, [images]);
+
+  return (
+    <Box sx={{ mb: 4 }}>
+      <Typography variant="h6" gutterBottom>
+        Page {index + 1}
+      </Typography>
+      <Box sx={{ mb: 2, border: '1px solid #ccc' }}>
+        <canvas
+          ref={previewCanvasRef}
+          width={800}
+          height={565}
+          style={{
+            width: '100%',
+            height: 'auto'
+          }}
+        />
+      </Box>
+      <Box sx={{ mb: 2, textAlign: 'left' }}>
+        <Button 
+          variant="contained" 
+          onClick={() => onPrint(index)}
+          sx={{ ml: 4 }}
+        >
+          Print
+        </Button>
+        <Button 
+          variant="outlined" 
+          onClick={() => onSaveAsPNG(index)}
+        >
+          Save as PNG
+        </Button>
+      </Box>
+      <canvas
+        ref={canvasRef}
+        width={A3_WIDTH}
+        height={A3_HEIGHT}
+        style={{ display: 'none' }}
+      />
+    </Box>
+  );
+});
+
+export default PrintCanvas; 

@@ -2,6 +2,12 @@
 export const A3_WIDTH = 4961; // 420mm * 300DPI / 25.4
 export const A3_HEIGHT = 3508; // 297mm * 300DPI / 25.4
 
+export const A4_WIDTH = 3508;
+export const A4_HEIGHT = 2480; 
+
+export const A5_WIDTH = 2480; 
+export const A5_HEIGHT = 1748;
+
 // Grid dimensions
 export const GRID_COLS = 4;
 export const GRID_ROWS = 2;
