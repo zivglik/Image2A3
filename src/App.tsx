@@ -4,6 +4,7 @@ import {
   Button, 
   Container, 
   Typography,
+  Grid,
 } from '@mui/material';
 import { ImageData } from './types/image';
 import { A3_WIDTH, A3_HEIGHT, CELL_WIDTH, CELL_HEIGHT, GRID_COLS, GRID_ROWS } from './constants/dimensions';
@@ -11,20 +12,12 @@ import { processImage, calculateImageDimensions, drawRotatedImage } from './util
 
 function App() {
   const [images, setImages] = useState<ImageData[]>([]);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const previewCanvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
-
-    // בודק אם נבחרו יותר מ-8 תמונות
-    if (files.length > 8) {
-      alert('ניתן לבחור עד 8 תמונות בלבד. אנא בחר שוב.');
-      // מנקה את הבחירה
-      event.target.value = '';
-      return;
-    }
 
     // מאפס את מערך התמונות הקיים
     setImages([]);
@@ -46,6 +39,7 @@ function App() {
   const drawOnCanvas = (
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
+    images: ImageData[],
     scale: number = 1
   ) => {
     // Clear canvas
@@ -81,33 +75,46 @@ function App() {
   };
 
   const drawCanvas = () => {
-    // Draw on print canvas
-    const printCanvas = canvasRef.current;
-    const printCtx = printCanvas?.getContext('2d');
-    if (printCanvas && printCtx) {
-      printCanvas.width = A3_WIDTH;
-      printCanvas.height = A3_HEIGHT;
-      drawOnCanvas(printCanvas, printCtx, 1);
+    const imagesPerCanvas = GRID_COLS * GRID_ROWS;
+    const numberOfCanvases = Math.ceil(images.length / imagesPerCanvas);
+
+    // Initialize refs arrays if needed
+    if (canvasRefs.current.length !== numberOfCanvases) {
+      canvasRefs.current = new Array(numberOfCanvases).fill(null);
+      previewCanvasRefs.current = new Array(numberOfCanvases).fill(null);
     }
 
-    // Draw on preview canvas
-    const previewCanvas = previewCanvasRef.current;
-    const previewCtx = previewCanvas?.getContext('2d');
-    if (previewCanvas && previewCtx) {
-      // Calculate scale to fit preview canvas
-      const scale = Math.min(
-        previewCanvas.width / A3_WIDTH,
-        previewCanvas.height / A3_HEIGHT
-      );
-      
-      // Set dimensions maintaining aspect ratio
-      const scaledWidth = A3_WIDTH * scale;
-      const scaledHeight = A3_HEIGHT * scale;
-      
-      previewCanvas.width = scaledWidth;
-      previewCanvas.height = scaledHeight;
-      
-      drawOnCanvas(previewCanvas, previewCtx, scale);
+    for (let i = 0; i < numberOfCanvases; i++) {
+      const startIndex = i * imagesPerCanvas;
+      const endIndex = Math.min(startIndex + imagesPerCanvas, images.length);
+      const canvasImages = images.slice(startIndex, endIndex);
+
+      // Draw on print canvas
+      const printCanvas = canvasRefs.current[i];
+      const printCtx = printCanvas?.getContext('2d');
+      if (printCanvas && printCtx) {
+        printCanvas.width = A3_WIDTH;
+        printCanvas.height = A3_HEIGHT;
+        drawOnCanvas(printCanvas, printCtx, canvasImages, 1);
+      }
+
+      // Draw on preview canvas
+      const previewCanvas = previewCanvasRefs.current[i];
+      const previewCtx = previewCanvas?.getContext('2d');
+      if (previewCanvas && previewCtx) {
+        const scale = Math.min(
+          previewCanvas.width / A3_WIDTH,
+          previewCanvas.height / A3_HEIGHT
+        );
+        
+        const scaledWidth = A3_WIDTH * scale;
+        const scaledHeight = A3_HEIGHT * scale;
+        
+        previewCanvas.width = scaledWidth;
+        previewCanvas.height = scaledHeight;
+        
+        drawOnCanvas(previewCanvas, previewCtx, canvasImages, scale);
+      }
     }
   };
 
@@ -115,8 +122,8 @@ function App() {
     drawCanvas();
   }, [images]);
 
-  const handlePrint = () => {
-    const canvas = canvasRef.current;
+  const handlePrint = (canvasIndex: number) => {
+    const canvas = canvasRefs.current[canvasIndex];
     if (!canvas) return;
 
     const printWindow = window.open('');
@@ -155,17 +162,71 @@ function App() {
     };
   };
 
-  const handleSaveAsPNG = () => {
-    if (!canvasRef.current) return;
+  const handleSaveAsPNG = (canvasIndex: number) => {
+    const canvas = canvasRefs.current[canvasIndex];
+    if (!canvas) return;
+    
+    const now = new Date();
+    const dateStr = now.toISOString()
+      .replace(/[:.]/g, '-')  // Replace colons and dots with dashes
+      .replace('T', '_')      // Replace T with underscore
+      .slice(0, 19);          // Take only date and time, remove milliseconds
     
     const link = document.createElement('a');
-    link.download = 'print-layout.png';
-    link.href = canvasRef.current.toDataURL('image/png', 1.0);
+    link.download = `print-layout-${canvasIndex + 1}_${dateStr}.png`;
+    link.href = canvas.toDataURL('image/png', 1.0);
     
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+
+  const renderCanvas = (index: number) => {
+    return (
+      <Box key={index} sx={{ mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          עמוד {index + 1}
+        </Typography>
+        <Box sx={{ mb: 2, border: '1px solid #ccc' }}>
+          <canvas
+            ref={(el) => {
+              previewCanvasRefs.current[index] = el;
+            }}
+            width={800}
+            height={565}
+            style={{
+              width: '100%',
+              height: 'auto'
+            }}
+          />
+        </Box>
+        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
+          <Button 
+            variant="contained" 
+            onClick={() => handlePrint(index)}
+          >
+            הדפס
+          </Button>
+          <Button 
+            variant="outlined" 
+            onClick={() => handleSaveAsPNG(index)}
+          >
+            שמור כ-PNG
+          </Button>
+        </Box>
+        <canvas
+          ref={(el) => {
+            canvasRefs.current[index] = el;
+          }}
+          width={A3_WIDTH}
+          height={A3_HEIGHT}
+          style={{ display: 'none' }}
+        />
+      </Box>
+    );
+  };
+
+  const numberOfCanvases = Math.ceil(images.length / (GRID_COLS * GRID_ROWS));
 
   return (
     <Container maxWidth="lg">
@@ -190,44 +251,7 @@ function App() {
           </label>
         </Box>
 
-        {/* Preview Canvas */}
-        <Box sx={{ mb: 2, border: '1px solid #ccc' }}>
-          {/* Canvas with A3 aspect ratio: 800 * (297/420) = 565 */}
-          <canvas
-            ref={previewCanvasRef}
-            width={800}
-            height={565}
-            style={{
-              width: '100%',
-              height: 'auto'
-            }}
-          />
-        </Box>
-
-        {images.length > 0 && (
-          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
-            <Button 
-              variant="contained" 
-              onClick={handlePrint}
-            >
-              הדפס
-            </Button>
-            <Button 
-              variant="outlined" 
-              onClick={handleSaveAsPNG}
-            >
-              שמור כ-PNG
-            </Button>
-          </Box>
-        )}
-        
-        {/* Hidden Print Canvas */}
-        <canvas
-          ref={canvasRef}
-          width={A3_WIDTH}
-          height={A3_HEIGHT}
-          style={{ display: 'none' }}
-        />
+        {Array.from({ length: numberOfCanvases }, (_, i) => renderCanvas(i))}
       </Box>
     </Container>
   );
