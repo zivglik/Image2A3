@@ -60,12 +60,12 @@ function App() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
+      <Box sx={{ my: 4, textAlign: 'left' }}>
         <Typography variant="h4" component="h1" gutterBottom>
           A3 Print Layout
         </Typography>
         
-        <Box sx={{ mb: 4 }}>
+        <Box sx={{ mb: 4, textAlign: 'left' }}>
           <input
             accept="image/*"
             type="file"
@@ -74,25 +74,24 @@ function App() {
             style={{ display: 'none' }}
             id="image-upload"
           />
-          <label htmlFor="image-upload">
+          <label htmlFor="image-upload" style={{ display: 'block', textAlign: 'left' }}>
             <Button variant="contained" component="span">
               Select Images
             </Button>
           </label>
-        </Box>
 
-        {images.length > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Button 
-              variant="contained" 
-              color="secondary"
-              onClick={handleSaveAllAsPNG}
-              sx={{ mb: 2 }}
-            >
-              Save All Pages as PNG
-            </Button>
-          </Box>
-        )}
+          {images.length > 0 && (
+            <Box sx={{ mt: 2, textAlign: 'left' }}>
+              <Button 
+                variant="contained" 
+                color="secondary"
+                onClick={handleSaveAllAsPNG}
+              >
+                Save All Pages as PNG
+              </Button>
+            </Box>
+          )}
+        </Box>
 
         {Array.from({ length: numberOfCanvases }, (_, i) => {
           const startIndex = i * (GRID_COLS * GRID_ROWS);

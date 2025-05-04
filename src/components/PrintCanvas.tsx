@@ -106,10 +106,11 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ index, image
           }}
         />
       </Box>
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
+      <Box sx={{ mb: 2, textAlign: 'left' }}>
         <Button 
           variant="contained" 
           onClick={() => onPrint(index)}
+          sx={{ ml: 4 }}
         >
           Print
         </Button>
