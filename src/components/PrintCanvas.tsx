@@ -16,6 +16,7 @@ interface PrintCanvasProps {
   pageSize: keyof typeof PAGE_SIZES;
   rows: number;
   cols: number;
+  stretchImages: boolean;
 }
 
 const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ 
@@ -25,7 +26,8 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
   onSaveAsPNG,
   pageSize,
   rows,
-  cols
+  cols,
+  stretchImages
 }, ref) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const previewCanvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -59,7 +61,8 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
         image.width,
         image.height,
         cellWidth,
-        cellHeight
+        cellHeight,
+        stretchImages
       );
       
       // Scale the dimensions
@@ -106,7 +109,7 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
       
       drawOnCanvas(previewCanvas, previewCtx, images, scale);
     }
-  }, [images, pageSize, rows, cols]);
+  }, [images, pageSize, rows, cols, stretchImages]);
 
   return (
     <Box sx={{ mb: 4 }}>

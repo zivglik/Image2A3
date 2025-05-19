@@ -15,8 +15,17 @@ export const calculateImageDimensions = (
   imageWidth: number, 
   imageHeight: number,
   cellWidth: number,
-  cellHeight: number
+  cellHeight: number,
+  stretchImages: boolean = false
 ) => {
+  if (stretchImages) {
+    return {
+      width: cellWidth,
+      height: cellHeight,
+      shouldRotate: false
+    };
+  }
+
   const aspectRatio = imageWidth / imageHeight;
   const isLandscape = imageWidth > imageHeight;
   const isNearlySquare = aspectRatio > 0.9 && aspectRatio < 1.1;

@@ -9,6 +9,8 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import { ImageData } from './types/image';
 import { GRID_COLS_OPTIONS, PAGE_SIZES, GRID_ROWS_OPTIONS } from './constants/dimensions';
@@ -21,6 +23,7 @@ function App() {
   const [pageSize, setPageSize] = useState<keyof typeof PAGE_SIZES>('A3');
   const [rows, setRows] = useState<number>(2);
   const [cols, setCols] = useState<number>(4);
+  const [stretchImages, setStretchImages] = useState<boolean>(false);
   const canvasRefs = useRef<(PrintCanvasRef | null)[]>([]);
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,6 +57,10 @@ function App() {
 
   const handleColsChange = (event: SelectChangeEvent) => {
     setCols(Number(event.target.value));
+  };
+
+  const handleStretchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setStretchImages(event.target.checked);
   };
 
   const handlePrint = (index: number) => {
@@ -125,6 +132,16 @@ function App() {
             </Select>
           </FormControl>
 
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={stretchImages}
+                onChange={handleStretchChange}
+              />
+            }
+            label="מתיחת תמונות לגודל מקסימלי"
+          />
+
           <input
             accept="image/*"
             type="file"
@@ -166,6 +183,7 @@ function App() {
               pageSize={pageSize}
               rows={rows}
               cols={cols}
+              stretchImages={stretchImages}
             />
           );
         })}
