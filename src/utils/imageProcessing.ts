@@ -22,12 +22,11 @@ export const calculateImageDimensions = (
   const isNearlySquare = aspectRatio > 0.9 && aspectRatio < 1.1;
 
   if (isNearlySquare) {
-    // תמונות מרובעות - נשמור על יחס הגובה-רוחב ונמתח לפי הגבול הקטן יותר
-    const scale = Math.min(cellWidth / imageWidth, cellHeight / imageHeight);
+    // תמונות מרובעות - נמתח אותן לגודל מלא של התא
     return {
-      width: imageWidth * scale,
-      height: imageHeight * scale,
-      shouldRotate: false
+      width: cellWidth,
+      height: cellHeight,
+      shouldRotate: true
     };
   }
 
