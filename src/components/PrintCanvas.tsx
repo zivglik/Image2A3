@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { ImageData } from '../types/image';
-import { A3_WIDTH, A3_HEIGHT, CELL_WIDTH, CELL_HEIGHT, GRID_COLS } from '../constants/dimensions';
+import { PAGE_SIZES, calculateCellDimensions } from '../constants/dimensions';
 import { calculateImageDimensions, drawRotatedImage } from '../utils/imageProcessing';
 
 export interface PrintCanvasRef {
@@ -13,9 +13,20 @@ interface PrintCanvasProps {
   images: ImageData[];
   onPrint: (index: number) => void;
   onSaveAsPNG: (index: number) => void;
+  pageSize: keyof typeof PAGE_SIZES;
+  rows: number;
+  cols: number;
 }
 
-const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ index, images, onPrint, onSaveAsPNG }, ref) => {
+const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ 
+  index, 
+  images, 
+  onPrint, 
+  onSaveAsPNG,
+  pageSize,
+  rows,
+  cols
+}, ref) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const previewCanvasRef = React.useRef<HTMLCanvasElement>(null);
 
@@ -33,18 +44,23 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ index, image
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Calculate scaled dimensions
-    const scaledCellWidth = CELL_WIDTH * scale;
-    const scaledCellHeight = CELL_HEIGHT * scale;
+    const { cellWidth, cellHeight } = calculateCellDimensions(pageSize, rows, cols);
+    const scaledCellWidth = cellWidth * scale;
+    const scaledCellHeight = cellHeight * scale;
 
     images.forEach((image, index) => {
-      const col = index % GRID_COLS;
-      const row = Math.floor(index / GRID_COLS);
+      const col = index % cols;
+      const row = Math.floor(index / cols);
       
       const x = col * scaledCellWidth;
       const y = row * scaledCellHeight;
 
-      const { width: originalWidth, height: originalHeight, shouldRotate } = calculateImageDimensions(image.width, image.height);
+      const { width: originalWidth, height: originalHeight, shouldRotate } = calculateImageDimensions(
+        image.width,
+        image.height,
+        cellWidth,
+        cellHeight
+      );
       
       // Scale the dimensions
       const width = originalWidth * scale;
@@ -62,12 +78,14 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ index, image
   };
 
   React.useEffect(() => {
+    const { width, height } = PAGE_SIZES[pageSize];
+    
     // Draw on print canvas
     const printCanvas = canvasRef.current;
     const printCtx = printCanvas?.getContext('2d');
     if (printCanvas && printCtx) {
-      printCanvas.width = A3_WIDTH;
-      printCanvas.height = A3_HEIGHT;
+      printCanvas.width = width;
+      printCanvas.height = height;
       drawOnCanvas(printCanvas, printCtx, images, 1);
     }
 
@@ -76,19 +94,19 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ index, image
     const previewCtx = previewCanvas?.getContext('2d');
     if (previewCanvas && previewCtx) {
       const scale = Math.min(
-        previewCanvas.width / A3_WIDTH,
-        previewCanvas.height / A3_HEIGHT
+        previewCanvas.width / width,
+        previewCanvas.height / height
       );
       
-      const scaledWidth = A3_WIDTH * scale;
-      const scaledHeight = A3_HEIGHT * scale;
+      const scaledWidth = width * scale;
+      const scaledHeight = height * scale;
       
       previewCanvas.width = scaledWidth;
       previewCanvas.height = scaledHeight;
       
       drawOnCanvas(previewCanvas, previewCtx, images, scale);
     }
-  }, [images]);
+  }, [images, pageSize, rows, cols]);
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -102,7 +120,8 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ index, image
           height={565}
           style={{
             width: '100%',
-            height: 'auto'
+            height: 'auto',
+            backgroundColor: 'white'
           }}
         />
       </Box>
@@ -110,7 +129,7 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ index, image
         <Button 
           variant="contained" 
           onClick={() => onPrint(index)}
-          sx={{ ml: 4 }}
+          sx={{ mr: 4 }}
         >
           Print
         </Button>
@@ -123,8 +142,8 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({ index, image
       </Box>
       <canvas
         ref={canvasRef}
-        width={A3_WIDTH}
-        height={A3_HEIGHT}
+        width={PAGE_SIZES[pageSize].width}
+        height={PAGE_SIZES[pageSize].height}
         style={{ display: 'none' }}
       />
     </Box>

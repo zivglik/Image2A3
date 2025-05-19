@@ -1,5 +1,5 @@
 import { ImageData } from '../types/image';
-import { CELL_WIDTH, CELL_HEIGHT } from '../constants/dimensions';
+import { calculateCellDimensions } from '../constants/dimensions';
 
 export const processImage = (image: HTMLImageElement): ImageData => {
   const { width, height } = image;
@@ -11,31 +11,34 @@ export const processImage = (image: HTMLImageElement): ImageData => {
   };
 };
 
-export const calculateImageDimensions = (imageWidth: number, imageHeight: number) => {
+export const calculateImageDimensions = (
+  imageWidth: number, 
+  imageHeight: number,
+  cellWidth: number,
+  cellHeight: number
+) => {
   const aspectRatio = imageWidth / imageHeight;
   const isLandscape = imageWidth > imageHeight;
   const isNearlySquare = aspectRatio > 0.9 && aspectRatio < 1.1;
 
   if (isNearlySquare) {
-    // תמונות מרובעות - למתוח לרוחב המקסימלי
+    // תמונות מרובעות - נשמור על יחס הגובה-רוחב ונמתח לפי הגבול הקטן יותר
+    const scale = Math.min(cellWidth / imageWidth, cellHeight / imageHeight);
     return {
-      width: CELL_WIDTH,
-      height: CELL_WIDTH / aspectRatio,
+      width: imageWidth * scale,
+      height: imageHeight * scale,
       shouldRotate: false
     };
   }
 
   if (isLandscape) {
-
-
     const rotatedAspectRatio = imageHeight / imageWidth;
     
-    let rotatedHeight = CELL_HEIGHT;
+    let rotatedHeight = cellHeight;
     let rotatedWidth = rotatedHeight * rotatedAspectRatio;
 
-
-    if (rotatedWidth > CELL_WIDTH) {
-      rotatedWidth = CELL_WIDTH;
+    if (rotatedWidth > cellWidth) {
+      rotatedWidth = cellWidth;
       rotatedHeight = rotatedWidth / rotatedAspectRatio;
     }
 
@@ -46,26 +49,21 @@ export const calculateImageDimensions = (imageWidth: number, imageHeight: number
     };
   }
 
-
-  const maxHeight = CELL_HEIGHT;
-  
-
+  const maxHeight = cellHeight;
   let width = maxHeight * aspectRatio;
-  
 
-  if (width > CELL_WIDTH) {
-    const scale = CELL_WIDTH / width;
-    width = CELL_WIDTH;
+  if (width > cellWidth) {
+    const scale = cellWidth / width;
+    width = cellWidth;
     return {
-      width: CELL_WIDTH,
+      width: cellWidth,
       height: maxHeight * scale,
       shouldRotate: false
     };
   }
-  
 
-  if (width < CELL_WIDTH) {
-    width = CELL_WIDTH;
+  if (width < cellWidth) {
+    width = cellWidth;
   }
 
   return {
@@ -86,18 +84,14 @@ export const drawRotatedImage = (
   const processingCanvas = document.createElement('canvas');
   const processingCtx = processingCanvas.getContext('2d')!;
   
-
   processingCanvas.width = width;
   processingCanvas.height = height;
   
-
   processingCtx.translate(width/2, height/2);
   processingCtx.rotate(Math.PI / 2);
   processingCtx.translate(-height/2, -width/2);
   
-
   processingCtx.drawImage(image, 0, 0, height, width);
   
-
   ctx.drawImage(processingCanvas, x, y);
 }; 

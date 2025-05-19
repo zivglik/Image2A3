@@ -1,17 +1,30 @@
-// A3 dimensions in pixels at 300 DPI
-export const A3_WIDTH = 4961; // 420mm * 300DPI / 25.4
-export const A3_HEIGHT = 3508; // 297mm * 300DPI / 25.4
+// Page dimensions in pixels at 300 DPI
+export const PAGE_SIZES = {
+  A3: {
+    width: 4961,  // 420mm * 300DPI / 25.4
+    height: 3508, // 297mm * 300DPI / 25.4
+    name: 'A3'
+  },
+  A4: {
+    width: 3508,  // 297mm * 300DPI / 25.4
+    height: 2480, // 210mm * 300DPI / 25.4
+    name: 'A4'
+  },
+  A5: {
+    width: 2480,  // 210mm * 300DPI / 25.4
+    height: 1748, // 148mm * 300DPI / 25.4
+    name: 'A5'
+  }
+};
 
-export const A4_WIDTH = 3508;
-export const A4_HEIGHT = 2480; 
+export const GRID_ROWS_OPTIONS = [2, 3, 4, 5, 6];
+export const GRID_COLS_OPTIONS = [2, 3, 4, 5, 6];
 
-export const A5_WIDTH = 2480; 
-export const A5_HEIGHT = 1748;
-
-// Grid dimensions
-export const GRID_COLS = 4;
-export const GRID_ROWS = 2;
-
-// Calculate exact cell dimensions
-export const CELL_WIDTH = Math.floor(A3_WIDTH / GRID_COLS);
-export const CELL_HEIGHT = Math.floor(A3_HEIGHT / GRID_ROWS); 
+// Calculate cell dimensions based on page size and grid configuration
+export const calculateCellDimensions = (pageSize: keyof typeof PAGE_SIZES, rows: number, cols: number) => {
+  const { width, height } = PAGE_SIZES[pageSize];
+  return {
+    cellWidth: Math.floor(width / cols),
+    cellHeight: Math.floor(height / rows)
+  };
+}; 
