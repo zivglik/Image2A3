@@ -103,14 +103,16 @@ function App() {
   return (
     <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
       <Box sx={{ textAlign: 'left' }}>
-        <Typography sx={{ py: 4 }} variant="h4" component="h1" gutterBottom>
+        <Typography sx={{ py: 4 }} variant="h4" >
     <GridViewIcon/> Smart Photo Grid
-
+    <Typography sx={{ py: 1,fontSize: 13 }}  >
+Select photos from your gallery, set the page size, number of rows and columns, choose whether to stretch the images to fit the cells – then save as PNG or PDF, or print directly.
+</Typography>
 
         </Typography>
         
         <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
+          direction={{ xs: 'row', sm: 'row' }} 
           spacing={2} 
           sx={{ 
             mb: 4, 
@@ -118,7 +120,7 @@ function App() {
             flexWrap: 'wrap'
           }}
         >
-          <FormControl sx={{ minWidth: { xs: '100%', sm: 120 } }}>
+          <FormControl sx={{ minWidth: { xs: "30%", sm: 120 } }}>
             <InputLabel>Page Size</InputLabel>
             <Select
               value={pageSize}
@@ -131,7 +133,7 @@ function App() {
             </Select>
           </FormControl>
 
-          <FormControl sx={{ minWidth: { xs: '100%', sm: 120 } }}>
+          <FormControl sx={{ minWidth: { xs: "30%", sm: 120 } }}>
             <InputLabel>Rows</InputLabel>
             <Select
               value={rows.toString()}
@@ -144,7 +146,7 @@ function App() {
             </Select>
           </FormControl>
 
-          <FormControl sx={{ minWidth: { xs: '100%', sm: 120 } }}>
+          <FormControl sx={{ minWidth: { xs: "30%", sm: 120 } }}>
             <InputLabel>Columns</InputLabel>
             <Select
               value={cols.toString()}
@@ -158,6 +160,7 @@ function App() {
           </FormControl>
 
           <FormControlLabel
+           
             control={
               <Checkbox
                 checked={stretchImages}
@@ -165,7 +168,9 @@ function App() {
               />
             }
             label="Fit images"
-            sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
+      
+
+            
           />
         </Stack>
 
@@ -202,6 +207,7 @@ function App() {
           </label>
 
           <Button 
+          disabled={images.length === 0}
             variant="contained" 
             color="secondary"
             onClick={handleSaveAllAsPNG}
@@ -216,6 +222,7 @@ function App() {
           </Button>
 
           <Button 
+           disabled={images.length === 0}
             variant="contained" 
             color="secondary"
             onClick={handleSaveAllAsPDF}
