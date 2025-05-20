@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import GridViewIcon from '@mui/icons-material/GridView';
 import { 
   Box, 
   Button, 
@@ -101,9 +102,11 @@ function App() {
 
   return (
     <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
-      <Box sx={{ my: 4, textAlign: 'left' }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Print Layout
+      <Box sx={{ textAlign: 'left' }}>
+        <Typography sx={{ py: 4 }} variant="h4" component="h1" gutterBottom>
+    <GridViewIcon/> Smart Photo Grid
+
+
         </Typography>
         
         <Stack 
