@@ -17,8 +17,8 @@ export const PAGE_SIZES = {
   }
 };
 
-export const GRID_ROWS_OPTIONS = [2, 3, 4, 5, 6];
-export const GRID_COLS_OPTIONS = [2, 3, 4, 5, 6];
+export const GRID_ROWS_OPTIONS = [2, 3, 4, 5, 6,7,8,9,10];
+export const GRID_COLS_OPTIONS = [2, 3, 4, 5, 6,7,8,9,10];
 
 // Calculate cell dimensions based on page size and grid configuration
 export const calculateCellDimensions = (pageSize: keyof typeof PAGE_SIZES, rows: number, cols: number) => {

@@ -152,16 +152,18 @@ function App() {
                 onChange={handleStretchChange}
               />
             }
-            label="מתיחת תמונות לגודל מקסימלי"
+            label="Fit images"
             sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
           />
 
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 2, 
-            flexDirection: { xs: 'column', sm: 'row' },
-            width: { xs: '100%', sm: 'auto' }
-          }}>
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            spacing={2}
+            sx={{ 
+              width: { xs: '100%', sm: 'auto' },
+              minWidth: { sm: '200px' }
+            }}
+          >
             <input
               accept="image/*"
               type="file"
@@ -185,10 +187,15 @@ function App() {
               color="secondary"
               onClick={handleSaveAllAsPNG}
               fullWidth={isMobile}
+              sx={{ 
+                whiteSpace: 'nowrap',
+                minWidth: { sm: '180px' },
+                px: { sm: 7 }
+              }}
             >
               Save All Pages as PNG
             </Button>
-          </Box>
+          </Stack>
         </Stack>
 
         {Array.from({ length: numberOfCanvases }, (_, i) => {
