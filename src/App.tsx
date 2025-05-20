@@ -11,6 +11,9 @@ import {
   SelectChangeEvent,
   FormControlLabel,
   Checkbox,
+  Stack,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { ImageData } from './types/image';
 import { GRID_COLS_OPTIONS, PAGE_SIZES, GRID_ROWS_OPTIONS } from './constants/dimensions';
@@ -25,6 +28,8 @@ function App() {
   const [cols, setCols] = useState<number>(4);
   const [stretchImages, setStretchImages] = useState<boolean>(false);
   const canvasRefs = useRef<(PrintCanvasRef | null)[]>([]);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -86,14 +91,22 @@ function App() {
   const numberOfCanvases = Math.ceil(images.length / (cols * rows));
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
       <Box sx={{ my: 4, textAlign: 'left' }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Print Layout
         </Typography>
         
-        <Box sx={{ mb: 4, textAlign: 'left', display: 'flex', gap: 2, alignItems: 'center' }}>
-          <FormControl sx={{ minWidth: 120 }}>
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          spacing={2} 
+          sx={{ 
+            mb: 4, 
+            alignItems: { xs: 'stretch', sm: 'center' },
+            flexWrap: 'wrap'
+          }}
+        >
+          <FormControl sx={{ minWidth: { xs: '100%', sm: 120 } }}>
             <InputLabel>Page Size</InputLabel>
             <Select
               value={pageSize}
@@ -106,7 +119,7 @@ function App() {
             </Select>
           </FormControl>
 
-          <FormControl sx={{ minWidth: 120 }}>
+          <FormControl sx={{ minWidth: { xs: '100%', sm: 120 } }}>
             <InputLabel>Rows</InputLabel>
             <Select
               value={rows.toString()}
@@ -119,7 +132,7 @@ function App() {
             </Select>
           </FormControl>
 
-          <FormControl sx={{ minWidth: 120 }}>
+          <FormControl sx={{ minWidth: { xs: '100%', sm: 120 } }}>
             <InputLabel>Columns</InputLabel>
             <Select
               value={cols.toString()}
@@ -140,30 +153,43 @@ function App() {
               />
             }
             label="מתיחת תמונות לגודל מקסימלי"
+            sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
           />
 
-          <input
-            accept="image/*"
-            type="file"
-            multiple
-            onChange={handleImageSelect}
-            style={{ display: 'none' }}
-            id="image-upload"
-          />
-          <label htmlFor="image-upload" style={{ display: 'block', textAlign: 'left' }}>
-            <Button variant="contained" component="span">
-              Select Images
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 2, 
+            flexDirection: { xs: 'column', sm: 'row' },
+            width: { xs: '100%', sm: 'auto' }
+          }}>
+            <input
+              accept="image/*"
+              type="file"
+              multiple
+              onChange={handleImageSelect}
+              style={{ display: 'none' }}
+              id="image-upload"
+            />
+            <label htmlFor="image-upload" style={{ display: 'block', textAlign: 'left', width: '100%' }}>
+              <Button 
+                variant="contained" 
+                component="span"
+                fullWidth={isMobile}
+              >
+                Select Images
+              </Button>
+            </label>
+
+            <Button 
+              variant="contained" 
+              color="secondary"
+              onClick={handleSaveAllAsPNG}
+              fullWidth={isMobile}
+            >
+              Save All Pages as PNG
             </Button>
-          </label>
-
-          <Button 
-            variant="contained" 
-            color="secondary"
-            onClick={handleSaveAllAsPNG}
-          >
-            Save All Pages as PNG
-          </Button>
-        </Box>
+          </Box>
+        </Stack>
 
         {Array.from({ length: numberOfCanvases }, (_, i) => {
           const startIndex = i * (cols * rows);

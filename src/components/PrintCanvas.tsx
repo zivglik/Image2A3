@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, Stack, useTheme, useMediaQuery } from '@mui/material';
 import { ImageData } from '../types/image';
 import { PAGE_SIZES, calculateCellDimensions } from '../constants/dimensions';
 import { calculateImageDimensions, drawRotatedImage } from '../utils/imageProcessing';
@@ -31,6 +31,8 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
 }, ref) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const previewCanvasRef = React.useRef<HTMLCanvasElement>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useImperativeHandle(ref, () => ({
     getPrintCanvas: () => canvasRef.current
@@ -128,21 +130,26 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
           }}
         />
       </Box>
-      <Box sx={{ mb: 2, textAlign: 'left' }}>
+      <Stack 
+        direction={{ xs: 'column', sm: 'row' }} 
+        spacing={2} 
+        sx={{ mb: 2, textAlign: 'left' }}
+      >
         <Button 
           variant="contained" 
           onClick={() => onPrint(index)}
-          sx={{ mr: 4 }}
+          fullWidth={isMobile}
         >
           Print
         </Button>
         <Button 
           variant="outlined" 
           onClick={() => onSaveAsPNG(index)}
+          fullWidth={isMobile}
         >
           Save as PNG
         </Button>
-      </Box>
+      </Stack>
       <canvas
         ref={canvasRef}
         width={PAGE_SIZES[pageSize].width}
