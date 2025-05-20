@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import GridViewIcon from '@mui/icons-material/GridView';
-import { 
-  Box, 
-  Button, 
-  Container, 
+import {
+  Box,
+  Button,
+  Container,
   Typography,
   FormControl,
   InputLabel,
@@ -15,6 +15,10 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { ImageData } from './types/image';
 import { GRID_COLS_OPTIONS, PAGE_SIZES, GRID_ROWS_OPTIONS } from './constants/dimensions';
@@ -29,6 +33,7 @@ function App() {
   const [rows, setRows] = useState<number>(2);
   const [cols, setCols] = useState<number>(4);
   const [stretchImages, setStretchImages] = useState<boolean>(false);
+  const [openResetDialog, setOpenResetDialog] = useState(false);
   const canvasRefs = useRef<(PrintCanvasRef | null)[]>([]);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -39,7 +44,7 @@ function App() {
 
     // Reset existing images array
     setImages([]);
-    
+
     // Add new images
     const newImages: ImageData[] = [];
     Array.from(files).forEach(file => {
@@ -86,7 +91,7 @@ function App() {
     const canvases = canvasRefs.current
       .map(ref => ref?.getPrintCanvas())
       .filter((canvas): canvas is HTMLCanvasElement => canvas !== null);
-    
+
     saveAllCanvasesAsPNG(canvases);
   };
 
@@ -94,8 +99,25 @@ function App() {
     const canvases = canvasRefs.current
       .map(ref => ref?.getPrintCanvas())
       .filter((canvas): canvas is HTMLCanvasElement => canvas !== null);
-    
+
     saveAllCanvasesAsPDF(canvases);
+  };
+
+  const handleReset = () => {
+    setOpenResetDialog(true);
+  };
+
+  const handleConfirmReset = () => {
+    setImages([]);
+    setPageSize('A3');
+    setRows(2);
+    setCols(4);
+    setStretchImages(false);
+    setOpenResetDialog(false);
+  };
+
+  const handleCloseResetDialog = () => {
+    setOpenResetDialog(false);
   };
 
   const numberOfCanvases = Math.ceil(images.length / (cols * rows));
@@ -104,18 +126,18 @@ function App() {
     <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
       <Box sx={{ textAlign: 'left' }}>
         <Typography sx={{ py: 4 }} variant="h4" >
-    <GridViewIcon/> Smart Photo Grid
-    <Typography sx={{ py: 1,fontSize: 13 }}  >
-Select photos from your gallery, set the page size, number of rows and columns, choose whether to stretch the images to fit the cells – then save as PNG or PDF, or print directly.
-</Typography>
+          <GridViewIcon /> Smart Photo Grid
+          <Typography sx={{ py: 1, fontSize: 13 }}  >
+            Select photos from your gallery, set the page size, number of rows and columns, choose whether to stretch the images to fit the cells – then save as PNG or PDF, or print directly.
+          </Typography>
 
         </Typography>
-        
-        <Stack 
-          direction={{ xs: 'row', sm: 'row' }} 
-          spacing={2} 
-          sx={{ 
-            mb: 4, 
+
+        <Stack
+          direction={{ xs: 'row', sm: 'row' }}
+          spacing={2}
+          sx={{
+            mb: 2,
             alignItems: { xs: 'stretch', sm: 'center' },
             flexWrap: 'wrap'
           }}
@@ -159,8 +181,15 @@ Select photos from your gallery, set the page size, number of rows and columns, 
             </Select>
           </FormControl>
 
+
+        </Stack>
+        <Stack direction="row" 
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 4 }}
+        >
           <FormControlLabel
-           
+
             control={
               <Checkbox
                 checked={stretchImages}
@@ -168,16 +197,22 @@ Select photos from your gallery, set the page size, number of rows and columns, 
               />
             }
             label="Fit images"
-      
 
-            
+
+
           />
+          <Button
+            variant="outlined"
+            component="span"
+            onClick={handleReset}
+          >
+            Reset
+          </Button>
         </Stack>
-
-        <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
-          sx={{ 
+          sx={{
             mb: 4,
             alignItems: { xs: 'stretch', sm: 'flex-start' }
           }}
@@ -190,29 +225,29 @@ Select photos from your gallery, set the page size, number of rows and columns, 
             style={{ display: 'none' }}
             id="image-upload"
           />
-          <label htmlFor="image-upload" style={{   margin: '0px', display: 'block', textAlign: 'left', width: '100%' }}>
-            <Button 
-              variant="contained" 
+          <label htmlFor="image-upload" style={{ margin: '0px', display: 'block', textAlign: 'left', width: '100%' }}>
+            <Button
+              variant="contained"
               component="span"
               fullWidth={isMobile}
-              sx={{ 
+              sx={{
                 whiteSpace: 'nowrap',
                 minWidth: { sm: '120px' },
                 px: { sm: 3 },
-             
+
               }}
             >
               Select Images
             </Button>
           </label>
 
-          <Button 
-          disabled={images.length === 0}
-            variant="contained" 
+          <Button
+            disabled={images.length === 0}
+            variant="contained"
             color="secondary"
             onClick={handleSaveAllAsPNG}
             fullWidth={isMobile}
-            sx={{ 
+            sx={{
               whiteSpace: 'nowrap',
               minWidth: { sm: '180px' },
               px: { sm: 7 }
@@ -221,13 +256,13 @@ Select photos from your gallery, set the page size, number of rows and columns, 
             Save All Pages as PNG
           </Button>
 
-          <Button 
-           disabled={images.length === 0}
-            variant="contained" 
+          <Button
+            disabled={images.length === 0}
+            variant="contained"
             color="secondary"
             onClick={handleSaveAllAsPDF}
             fullWidth={isMobile}
-            sx={{ 
+            sx={{
               whiteSpace: 'nowrap',
               minWidth: { sm: '180px' },
               px: { sm: 7 }
@@ -259,6 +294,22 @@ Select photos from your gallery, set the page size, number of rows and columns, 
             />
           );
         })}
+
+        <Dialog
+          open={openResetDialog}
+          onClose={handleCloseResetDialog}
+        >
+          <DialogTitle>Reset Confirmation</DialogTitle>
+          <DialogContent>
+            Are you sure you want to reset everything? This will clear all selected images and settings.
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseResetDialog}>Cancel</Button>
+            <Button onClick={handleConfirmReset} color="error" autoFocus>
+              Yes, Reset
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Container>
   );
