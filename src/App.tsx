@@ -19,6 +19,7 @@ import { ImageData } from './types/image';
 import { GRID_COLS_OPTIONS, PAGE_SIZES, GRID_ROWS_OPTIONS } from './constants/dimensions';
 import { processImage } from './utils/imageProcessing';
 import { printCanvas, saveCanvasAsPNG, saveAllCanvasesAsPNG } from './utils/printUtils';
+import { saveAllCanvasesAsPDF } from './utils/pdfUtils';
 import PrintCanvas, { PrintCanvasRef } from './components/PrintCanvas';
 
 function App() {
@@ -86,6 +87,14 @@ function App() {
       .filter((canvas): canvas is HTMLCanvasElement => canvas !== null);
     
     saveAllCanvasesAsPNG(canvases);
+  };
+
+  const handleSaveAllAsPDF = () => {
+    const canvases = canvasRefs.current
+      .map(ref => ref?.getPrintCanvas())
+      .filter((canvas): canvas is HTMLCanvasElement => canvas !== null);
+    
+    saveAllCanvasesAsPDF(canvases);
   };
 
   const numberOfCanvases = Math.ceil(images.length / (cols * rows));
@@ -194,6 +203,20 @@ function App() {
               }}
             >
               Save All Pages as PNG
+            </Button>
+
+            <Button 
+              variant="contained" 
+              color="secondary"
+              onClick={handleSaveAllAsPDF}
+              fullWidth={isMobile}
+              sx={{ 
+                whiteSpace: 'nowrap',
+                minWidth: { sm: '180px' },
+                px: { sm: 7 }
+              }}
+            >
+              Save All Pages as PDF
             </Button>
           </Stack>
         </Stack>

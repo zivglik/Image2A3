@@ -3,6 +3,7 @@ import { Box, Button, Typography, Stack, useTheme, useMediaQuery } from '@mui/ma
 import { ImageData } from '../types/image';
 import { PAGE_SIZES, calculateCellDimensions } from '../constants/dimensions';
 import { calculateImageDimensions, drawRotatedImage } from '../utils/imageProcessing';
+import { saveCanvasAsPDF } from '../utils/pdfUtils';
 
 export interface PrintCanvasRef {
   getPrintCanvas: () => HTMLCanvasElement | null;
@@ -113,6 +114,12 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
     }
   }, [images, pageSize, rows, cols, stretchImages]);
 
+  const handleSaveAsPDF = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    saveCanvasAsPDF(canvas, index);
+  };
+
   return (
     <Box sx={{ mb: 4 }}>
       <Typography variant="h6" gutterBottom>
@@ -148,6 +155,13 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
           fullWidth={isMobile}
         >
           Save as PNG
+        </Button>
+        <Button 
+          variant="outlined" 
+          onClick={handleSaveAsPDF}
+          fullWidth={isMobile}
+        >
+          Save as PDF
         </Button>
       </Stack>
       <canvas
