@@ -164,61 +164,67 @@ function App() {
             label="Fit images"
             sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
           />
+        </Stack>
 
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            spacing={2}
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          spacing={2}
+          sx={{ 
+            mb: 4,
+            alignItems: { xs: 'stretch', sm: 'flex-start' }
+          }}
+        >
+          <input
+            accept="image/*"
+            type="file"
+            multiple
+            onChange={handleImageSelect}
+            style={{ display: 'none' }}
+            id="image-upload"
+          />
+          <label htmlFor="image-upload" style={{   margin: '0px', display: 'block', textAlign: 'left', width: '100%' }}>
+            <Button 
+              variant="contained" 
+              component="span"
+              fullWidth={isMobile}
+              sx={{ 
+                whiteSpace: 'nowrap',
+                minWidth: { sm: '120px' },
+                px: { sm: 3 },
+             
+              }}
+            >
+              Select Images
+            </Button>
+          </label>
+
+          <Button 
+            variant="contained" 
+            color="secondary"
+            onClick={handleSaveAllAsPNG}
+            fullWidth={isMobile}
             sx={{ 
-              width: { xs: '100%', sm: 'auto' },
-              minWidth: { sm: '200px' }
+              whiteSpace: 'nowrap',
+              minWidth: { sm: '180px' },
+              px: { sm: 7 }
             }}
           >
-            <input
-              accept="image/*"
-              type="file"
-              multiple
-              onChange={handleImageSelect}
-              style={{ display: 'none' }}
-              id="image-upload"
-            />
-            <label htmlFor="image-upload" style={{ display: 'block', textAlign: 'left', width: '100%' }}>
-              <Button 
-                variant="contained" 
-                component="span"
-                fullWidth={isMobile}
-              >
-                Select Images
-              </Button>
-            </label>
+            Save All Pages as PNG
+          </Button>
 
-            <Button 
-              variant="contained" 
-              color="secondary"
-              onClick={handleSaveAllAsPNG}
-              fullWidth={isMobile}
-              sx={{ 
-                whiteSpace: 'nowrap',
-                minWidth: { sm: '180px' },
-                px: { sm: 7 }
-              }}
-            >
-              Save All Pages as PNG
-            </Button>
-
-            <Button 
-              variant="contained" 
-              color="secondary"
-              onClick={handleSaveAllAsPDF}
-              fullWidth={isMobile}
-              sx={{ 
-                whiteSpace: 'nowrap',
-                minWidth: { sm: '180px' },
-                px: { sm: 7 }
-              }}
-            >
-              Save All Pages as PDF
-            </Button>
-          </Stack>
+          <Button 
+            variant="contained" 
+            color="secondary"
+            onClick={handleSaveAllAsPDF}
+            fullWidth={isMobile}
+            sx={{ 
+              whiteSpace: 'nowrap',
+              minWidth: { sm: '180px' },
+              px: { sm: 7 }
+            }}
+          >
+            Save All Pages as PDF
+          </Button>
         </Stack>
 
         {Array.from({ length: numberOfCanvases }, (_, i) => {
