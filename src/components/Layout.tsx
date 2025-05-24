@@ -36,6 +36,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Photos Grid', icon: <GridViewIcon />, path: '/photo-grid' },
+    { text: 'Flyer Grid', icon: <GridViewIcon />, path: '/flyer-grid' },
     // Add more menu items here as needed
   ];
 
