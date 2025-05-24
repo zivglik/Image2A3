@@ -1,5 +1,9 @@
 import React, { useState, useRef } from 'react';
 import GridViewIcon from '@mui/icons-material/GridView';
+import PrintIcon from '@mui/icons-material/Print';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import {
   Box,
   Button,
@@ -160,6 +164,7 @@ const PhotoGrid: React.FC = () => {
               variant="contained"
               component="span"
               fullWidth={isMobile}
+              startIcon={<AddPhotoAlternateIcon />}
               sx={{
                 whiteSpace: 'nowrap',
                 minWidth: { sm: '120px' },
@@ -175,6 +180,7 @@ const PhotoGrid: React.FC = () => {
             variant="contained"
             color="secondary"
             onClick={handleSaveAllAsPNG}
+            startIcon={<ImageIcon />}
             fullWidth={isMobile}
             sx={{
               whiteSpace: 'nowrap',
@@ -190,6 +196,7 @@ const PhotoGrid: React.FC = () => {
             variant="contained"
             color="secondary"
             onClick={handleSaveAllAsPDF}
+            startIcon={<PictureAsPdfIcon />}
             fullWidth={isMobile}
             sx={{
               whiteSpace: 'nowrap',

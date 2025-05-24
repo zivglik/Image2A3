@@ -16,11 +16,19 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
+  ButtonGroup,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PrintIcon from '@mui/icons-material/Print';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import { ImageData } from '../types/image';
 import { PAGE_SIZES } from '../constants/dimensions';
 import templates from '../utils/templetCollage';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface CollageTemplate {
   id: string;
@@ -130,27 +138,86 @@ const CollagePage: React.FC = () => {
     }
   }, [selectedTemplate, selectedImages, pageSize, orientation]);
 
-  return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Create Collage
-      </Typography>
-      <Typography variant="body1" paragraph>
-        Create beautiful collages from your selected images
-      </Typography>
+  const handlePrint = () => {
+    if (!canvasRef.current) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
 
-      <Box sx={{ mt: 4 }}>
-        <Stack 
-          direction={isMobile ? "column" : "row"} 
-          spacing={2} 
-          sx={{ 
-            mb: 2,
-            '& .MuiFormControl-root': {
-              width: isMobile ? '100%' : 200
+    const canvas = canvasRef.current;
+    const imgData = canvas.toDataURL('image/png');
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Collage</title>
+          <style>
+            body { margin: 0; }
+            img { width: 100%; height: auto; }
+            @media print {
+              img { max-width: 100%; }
             }
+          </style>
+        </head>
+        <body>
+          <img src="${imgData}" />
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handleSaveAsPDF = async () => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: orientation,
+      unit: 'mm',
+      format: pageSize.toLowerCase()
+    });
+
+    const imgWidth = pdf.internal.pageSize.getWidth();
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    pdf.save('collage.pdf');
+  };
+
+  const handleSaveAsPNG = () => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const link = document.createElement('a');
+    link.download = 'collage.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  return (
+    <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
+      <Box sx={{ textAlign: 'left' }}>
+        <Typography sx={{ py: 4 }} variant="h4" >
+          <ViewModuleIcon /> Create Collage
+          <Typography sx={{ py: 1, fontSize: 13 }}  >
+            Select photos from your gallery, choose a template, and create a beautiful collage. Save as PNG or PDF, or print directly.
+          </Typography>
+        </Typography>
+
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          sx={{
+            mb: 4,
+            alignItems: { xs: 'stretch', sm: 'flex-start' }
           }}
         >
-          <FormControl>
+          <FormControl sx={{ minWidth: { xs: "100%", sm: 200 } }}>
             <InputLabel>Page Size</InputLabel>
             <Select
               value={pageSize}
@@ -158,14 +225,12 @@ const CollagePage: React.FC = () => {
               onChange={handlePageSizeChange}
             >
               {Object.entries(PAGE_SIZES).map(([key, value]) => (
-                <MenuItem key={key} value={key}>
-                  {value.name}
-                </MenuItem>
+                <MenuItem key={key} value={key}>{value.name}</MenuItem>
               ))}
             </Select>
           </FormControl>
 
-          <FormControl>
+          <FormControl sx={{ minWidth: { xs: "100%", sm: 200 } }}>
             <InputLabel>Orientation</InputLabel>
             <Select
               value={orientation}
@@ -178,7 +243,7 @@ const CollagePage: React.FC = () => {
           </FormControl>
         </Stack>
 
-        <Box>
+        <Box sx={{ mb: 4 }}>
           <input
             accept="image/*"
             type="file"
@@ -187,8 +252,18 @@ const CollagePage: React.FC = () => {
             style={{ display: 'none' }}
             id="image-upload"
           />
-          <label htmlFor="image-upload">
-            <Button variant="contained" component="span" fullWidth={isMobile}>
+          <label htmlFor="image-upload" style={{ margin: '0px', display: 'block', textAlign: 'left', width: '100%' }}>
+            <Button
+              variant="contained"
+              component="span"
+              fullWidth={isMobile}
+              startIcon={<AddPhotoAlternateIcon />}
+              sx={{
+                whiteSpace: 'nowrap',
+                minWidth: { sm: '120px' },
+                px: { sm: 3 },
+              }}
+            >
               Select Images
             </Button>
           </label>
@@ -337,7 +412,9 @@ const CollagePage: React.FC = () => {
               sx={{ 
                 p: isMobile ? 1 : 2, 
                 display: 'flex', 
-                justifyContent: 'center',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2,
                 backgroundColor: '#f5f5f5',
                 overflow: 'hidden'
               }}
@@ -351,6 +428,36 @@ const CollagePage: React.FC = () => {
                   height: 'auto'
                 }}
               />
+              <Stack 
+                direction={isMobile ? "column" : "row"} 
+                spacing={2} 
+                sx={{ width: '100%', justifyContent: 'center' }}
+              >
+                <Button
+                  variant="contained"
+                  startIcon={<PrintIcon />}
+                  onClick={handlePrint}
+                  fullWidth={isMobile}
+                >
+                  Print
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<PictureAsPdfIcon />}
+                  onClick={handleSaveAsPDF}
+                  fullWidth={isMobile}
+                >
+                  Save as PDF
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<ImageIcon />}
+                  onClick={handleSaveAsPNG}
+                  fullWidth={isMobile}
+                >
+                  Save as PNG
+                </Button>
+              </Stack>
             </Paper>
           </Box>
         )}

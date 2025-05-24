@@ -1,5 +1,8 @@
 import React, { useState, useRef } from 'react';
 import CalendarViewMonthIcon from '@mui/icons-material/CalendarViewMonth';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import {
   Box,
   Button,
@@ -150,6 +153,7 @@ const FlyerGrid: React.FC = () => {
               variant="contained"
               component="span"
               fullWidth={isMobile}
+              startIcon={<AddPhotoAlternateIcon />}
               sx={{
                 whiteSpace: 'nowrap',
                 minWidth: { sm: '120px' },
@@ -165,6 +169,7 @@ const FlyerGrid: React.FC = () => {
             variant="contained"
             color="secondary"
             onClick={handleSaveAllAsPNG}
+            startIcon={<ImageIcon />}
             fullWidth={isMobile}
             sx={{
               whiteSpace: 'nowrap',
@@ -180,6 +185,7 @@ const FlyerGrid: React.FC = () => {
             variant="contained"
             color="secondary"
             onClick={handleSaveAllAsPDF}
+            startIcon={<PictureAsPdfIcon />}
             fullWidth={isMobile}
             sx={{
               whiteSpace: 'nowrap',

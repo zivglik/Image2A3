@@ -1,5 +1,8 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { Box, Button, Typography, Stack, useTheme, useMediaQuery } from '@mui/material';
+import PrintIcon from '@mui/icons-material/Print';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
 import { ImageData } from '../types/image';
 import { PAGE_SIZES, calculateCellDimensions } from '../constants/dimensions';
 import { calculateImageDimensions, drawRotatedImage } from '../utils/imageProcessing';
@@ -145,6 +148,7 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
         <Button 
           variant="contained" 
           onClick={() => onPrint(index)}
+          startIcon={<PrintIcon />}
           fullWidth={isMobile}
         >
           Print
@@ -152,6 +156,7 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
         <Button 
           variant="outlined" 
           onClick={() => onSaveAsPNG(index)}
+          startIcon={<ImageIcon />}
           fullWidth={isMobile}
         >
           Save as PNG
@@ -159,6 +164,7 @@ const PrintCanvas = forwardRef<PrintCanvasRef, PrintCanvasProps>(({
         <Button 
           variant="outlined" 
           onClick={handleSaveAsPDF}
+          startIcon={<PictureAsPdfIcon />}
           fullWidth={isMobile}
         >
           Save as PDF

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import PhotoGrid from './pages/PhotoGrid';
 import Home from './pages/Home';
@@ -15,7 +15,7 @@ function App() {
           <Route path="/photo-grid" element={<PhotoGrid />} />
           <Route path="/flyer-grid" element={<FlyerGrid />} />
           <Route path="/collage" element={<CollagePage />} />
-          {/* Add more routes here as needed */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
     </Router>
