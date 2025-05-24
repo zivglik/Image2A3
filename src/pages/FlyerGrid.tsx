@@ -112,11 +112,11 @@ const FlyerGrid: React.FC = () => {
   const numberOfCanvases = 1; // For flyers, we only need one canvas
 
   return (
-    <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth="lg" sx={{ px: { xs: 1, sm: 2 } }}>
       <Box sx={{ textAlign: 'left' }}>
-        <Typography sx={{ py: 4 }} variant="h4" >
+        <Typography sx={{ py: 2 }} variant="h4" >
           <CalendarViewMonthIcon /> Flyer Grid
-          <Typography sx={{ py: 1, fontSize: 13 }}  >
+          <Typography sx={{ py: 0.5, fontSize: 13 }}  >
             Upload a single image to create a grid of copies. Perfect for flyers, stickers, or labels. Choose the page size, number of rows and columns, and whether to stretch the images to fit the cells.
           </Typography>
         </Typography>

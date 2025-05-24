@@ -122,11 +122,11 @@ const PhotoGrid: React.FC = () => {
   const numberOfCanvases = Math.ceil(images.length / (cols * rows));
 
   return (
-    <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth="lg" sx={{ px: { xs: 1, sm: 2 } }}>
       <Box sx={{ textAlign: 'left' }}>
-        <Typography sx={{ py: 4 }} variant="h4" >
+        <Typography sx={{ py: 2 }} variant="h4" >
           <GridViewIcon /> Photos Grid
-          <Typography sx={{ py: 1, fontSize: 13 }}  >
+          <Typography sx={{ py: 0.5, fontSize: 13 }}  >
             Select photos from your gallery, set the page size, number of rows and columns, choose whether to stretch the images to fit the cells – then save as PNG or PDF, or print directly.
           </Typography>
         </Typography>

@@ -200,11 +200,11 @@ const CollagePage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth="lg" sx={{ px: { xs: 1, sm: 2 } }}>
       <Box sx={{ textAlign: 'left' }}>
-        <Typography sx={{ py: 4 }} variant="h4" >
+        <Typography sx={{ py: 2 }} variant="h4" >
           <ViewModuleIcon /> Create Collage
-          <Typography sx={{ py: 1, fontSize: 13 }}  >
+          <Typography sx={{ py: 0.5, fontSize: 13 }}  >
             Select photos from your gallery, choose a template, and create a beautiful collage. Save as PNG or PDF, or print directly.
           </Typography>
         </Typography>

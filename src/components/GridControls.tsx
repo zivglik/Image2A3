@@ -39,11 +39,12 @@ const GridControls: React.FC<GridControlsProps> = ({
     <>
       <Stack
         direction={{ xs: 'row', sm: 'row' }}
-        spacing={2}
+        
         sx={{
           mb: 2,
           alignItems: { xs: 'stretch', sm: 'center' },
-          flexWrap: 'wrap'
+          flexWrap: 'wrap',
+          justifyContent: 'space-between'
         }}
       >
         <FormControl sx={{ minWidth: { xs: "30%", sm: 120 } }}>
