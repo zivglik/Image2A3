@@ -18,7 +18,7 @@ import GridViewIcon from '@mui/icons-material/GridView';
 import CalendarViewMonthIcon from '@mui/icons-material/CalendarViewMonth';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import HomeIcon from '@mui/icons-material/Home';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const drawerWidth = 240;
 
@@ -30,9 +30,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const location = useLocation();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleMenuItemClick = () => {
+    if (isMobile) {
+      setMobileOpen(false);
+    }
   };
 
   const menuItems = [
@@ -51,7 +58,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </Toolbar>
       <List>
         {menuItems.map((item) => (
-          <ListItem key={item.text} component={Link} to={item.path} sx={{ cursor: 'pointer' }}>
+          <ListItem 
+            key={item.text} 
+            component={Link} 
+            to={item.path} 
+            onClick={handleMenuItemClick}
+            sx={{ 
+              cursor: 'pointer',
+              backgroundColor: location.pathname === item.path ? 'action.selected' : 'transparent',
+              '&:hover': {
+                backgroundColor: 'action.hover',
+              }
+            }}
+          >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItem>
