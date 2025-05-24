@@ -16,7 +16,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import GridViewIcon from '@mui/icons-material/GridView';
 import CalendarViewMonthIcon from '@mui/icons-material/CalendarViewMonth';
-
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import HomeIcon from '@mui/icons-material/Home';
 import { Link } from 'react-router-dom';
 
@@ -37,16 +37,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
-    { text: 'Photos Grid', icon: <GridViewIcon />, path: '/photo-grid' },
+    { text: 'Photo Grid', icon: <GridViewIcon />, path: '/photo-grid' },
     { text: 'Flyer Grid', icon: <CalendarViewMonthIcon />, path: '/flyer-grid' },
-    // Add more menu items here as needed
+    { text: 'Create Collage', icon: <ViewModuleIcon />, path: '/collage' },
   ];
 
   const drawer = (
     <div>
       <Toolbar>
         <Typography variant="h6" noWrap component="div">
-        Menu
+          Menu
         </Typography>
       </Toolbar>
       <List>
@@ -80,7 +80,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-          Smart Photo Grid
+            Smart Photo Grid
           </Typography>
         </Toolbar>
       </AppBar>

@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import PhotoGrid from './pages/PhotoGrid';
 import Home from './pages/Home';
 import FlyerGrid from './pages/FlyerGrid';
+import CollagePage from './pages/CollagePage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/photo-grid" element={<PhotoGrid />} />
           <Route path="/flyer-grid" element={<FlyerGrid />} />
+          <Route path="/collage" element={<CollagePage />} />
           {/* Add more routes here as needed */}
         </Routes>
       </Layout>
