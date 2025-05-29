@@ -16,7 +16,11 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
-  ButtonGroup,
+  Grid,
+  Modal,
+  Dialog,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PrintIcon from '@mui/icons-material/Print';
@@ -34,13 +38,15 @@ interface CollageTemplate {
   id: string;
   name: string;
   imageCount: number;
-  slots: {
-    id: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }[];
+  grid: string;
+  positions: string[];
+}
+
+interface ImagePosition {
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
 }
 
 const CollagePage: React.FC = () => {
@@ -49,8 +55,14 @@ const CollagePage: React.FC = () => {
   const [selectedImages, setSelectedImages] = useState<ImageData[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [pageSize, setPageSize] = useState<keyof typeof PAGE_SIZES>('A4');
-  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('landscape');
+  const [borderRadius, setBorderRadius] = useState<number>(16);
+  const [imagePositions, setImagePositions] = useState<{ [key: string]: ImagePosition }>({});
+  const [isDragging, setIsDragging] = useState<string | null>(null);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance: number; angle: number } | null>(null);
+  const collageRef = useRef<HTMLDivElement>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -61,8 +73,9 @@ const CollagePage: React.FC = () => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
       img.onload = () => {
+        const id = Math.random().toString(36).substr(2, 9);
         newImages.push({
-          id: Math.random().toString(36).substr(2, 9),
+          id,
           url: img.src,
           element: img,
           name: file.name,
@@ -71,6 +84,16 @@ const CollagePage: React.FC = () => {
         });
         if (newImages.length === files.length) {
           setSelectedImages(prev => [...prev, ...newImages]);
+          const newPositions = { ...imagePositions };
+          newImages.forEach(img => {
+            newPositions[img.id] = { 
+              x: -50, 
+              y: 0, 
+              scale: 1.2,
+              rotation: 0
+            };
+          });
+          setImagePositions(newPositions);
         }
       };
     });
@@ -78,10 +101,23 @@ const CollagePage: React.FC = () => {
 
   const handleRemoveImage = (imageId: string) => {
     setSelectedImages(prev => prev.filter(img => img.id !== imageId));
+    const newPositions = { ...imagePositions };
+    delete newPositions[imageId];
+    setImagePositions(newPositions);
   };
 
   const handleTemplateChange = (event: any) => {
     setSelectedTemplate(event.target.value);
+    const newPositions = { ...imagePositions };
+    Object.keys(newPositions).forEach(key => {
+      newPositions[key] = { x: -50, y: 0, scale: 1.2, rotation: 0 };
+    });
+    setImagePositions(newPositions);
+    setIsEditorOpen(true);
+  };
+
+  const handleCloseEditor = () => {
+    setIsEditorOpen(false);
   };
 
   const handlePageSizeChange = (event: any) => {
@@ -92,59 +128,176 @@ const CollagePage: React.FC = () => {
     setOrientation(event.target.value);
   };
 
-  const drawCollage = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !selectedTemplate || selectedImages.length === 0) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Set white background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const template = templates.find(t => t.id === selectedTemplate);
-    if (!template) return;
-
-    // Draw images using template slots
-    template.slots.forEach((slot, index) => {
-      if (index >= selectedImages.length) return;
-      
-      const image = selectedImages[index];
-      const x = slot.x * canvas.width;
-      const y = slot.y * canvas.height;
-      const width = slot.width * canvas.width;
-      const height = slot.height * canvas.height;
-
-      ctx.drawImage(image.element, x, y, width, height);
-    });
+  const handleBorderRadiusChange = (event: any) => {
+    setBorderRadius(event.target.value);
   };
 
-  const availableTemplates = selectedImages.length > 10
-    ? [{ id: 'random', name: 'Random Layout', imageCount: selectedImages.length }]
-    : templates.filter(template => template.imageCount === selectedImages.length);
+  const handleMouseDown = (imageId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(imageId);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dx = (e.clientX - dragStart.x) * 0.05;
+    const dy = (e.clientY - dragStart.y) * 0.05;
+
+    setImagePositions(prev => ({
+      ...prev,
+      [isDragging]: {
+        ...prev[isDragging],
+        x: prev[isDragging].x + dx,
+        y: prev[isDragging].y + dy,
+      },
+    }));
+
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(null);
+  };
+
+  const handleWheel = (imageId: string, e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.altKey) {
+      // Rotation with Alt + wheel
+      const rotationDelta = e.deltaY > 0 ? -5 : 5;
+      setImagePositions(prev => ({
+        ...prev,
+        [imageId]: {
+          ...prev[imageId],
+          rotation: (prev[imageId].rotation + rotationDelta) % 360,
+        },
+      }));
+    } else {
+      // Scaling with wheel
+      const delta = e.deltaY > 0 ? -0.05 : 0.05;
+      setImagePositions(prev => ({
+        ...prev,
+        [imageId]: {
+          ...prev[imageId],
+          scale: Math.max(0.5, Math.min(5, prev[imageId].scale + delta)),
+        },
+      }));
+    }
+  };
+
+  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch) => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const getTouchAngle = (touch1: React.Touch, touch2: React.Touch) => {
+    return Math.atan2(touch2.clientY - touch1.clientY, touch2.clientX - touch1.clientX) * 180 / Math.PI;
+  };
+
+  const handleTouchStart = (imageId: string, e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent default touch behavior
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      setTouchStart({
+        x: (touch1.clientX + touch2.clientX) / 2,
+        y: (touch1.clientY + touch2.clientY) / 2,
+        distance: getTouchDistance(touch1, touch2),
+        angle: getTouchAngle(touch1, touch2)
+      });
+    } else if (e.touches.length === 1) {
+      setIsDragging(imageId);
+      setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    }
+  };
+
+  const handleTouchMove = (imageId: string, e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent default touch behavior
+    if (e.touches.length === 2 && touchStart) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const currentDistance = getTouchDistance(touch1, touch2);
+      const currentAngle = getTouchAngle(touch1, touch2);
+      
+      // Calculate scale change
+      const scaleDelta = (currentDistance - touchStart.distance) * 0.01;
+      
+      // Calculate rotation change
+      const rotationDelta = currentAngle - touchStart.angle;
+      
+      setImagePositions(prev => ({
+        ...prev,
+        [imageId]: {
+          ...prev[imageId],
+          scale: Math.max(0.5, Math.min(5, prev[imageId].scale + scaleDelta)),
+          rotation: (prev[imageId].rotation + rotationDelta) % 360
+        }
+      }));
+
+      setTouchStart({
+        x: (touch1.clientX + touch2.clientX) / 2,
+        y: (touch1.clientY + touch2.clientY) / 2,
+        distance: currentDistance,
+        angle: currentAngle
+      });
+    } else if (e.touches.length === 1 && isDragging === imageId) {
+      // Handle dragging with single touch
+      const touch = e.touches[0];
+      const dx = (touch.clientX - dragStart.x) * 0.2; // Increased from 0.05 to 0.2 for faster movement
+      const dy = (touch.clientY - dragStart.y) * 0.2; // Increased from 0.05 to 0.2 for faster movement
+
+      setImagePositions(prev => ({
+        ...prev,
+        [imageId]: {
+          ...prev[imageId],
+          x: prev[imageId].x + dx,
+          y: prev[imageId].y + dy,
+        },
+      }));
+
+      setDragStart({ x: touch.clientX, y: touch.clientY });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchStart(null);
+    setIsDragging(null);
+  };
 
   useEffect(() => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const { width, height } = PAGE_SIZES[pageSize];
-      // Swap width and height if landscape
-      canvas.width = orientation === 'landscape' ? height : width;
-      canvas.height = orientation === 'landscape' ? width : height;
-      drawCollage();
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
     }
-  }, [selectedTemplate, selectedImages, pageSize, orientation]);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
-  const handlePrint = () => {
-    if (!canvasRef.current) return;
+  const availableTemplates = selectedImages.length > 0
+    ? templates.filter(template => template.imageCount === selectedImages.length)
+    : [];
+
+  const handlePrint = async () => {
+    if (!collageRef.current) return;
+    
+    const canvas = await html2canvas(collageRef.current, {
+      scale: 2,
+      backgroundColor: 'white',
+    });
     
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const canvas = canvasRef.current;
     const imgData = canvas.toDataURL('image/png');
     
     printWindow.document.write(`
@@ -172,9 +325,13 @@ const CollagePage: React.FC = () => {
   };
 
   const handleSaveAsPDF = async () => {
-    if (!canvasRef.current) return;
+    if (!collageRef.current) return;
 
-    const canvas = canvasRef.current;
+    const canvas = await html2canvas(collageRef.current, {
+      scale: 2,
+      backgroundColor: 'white',
+    });
+    
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
       orientation: orientation,
@@ -189,31 +346,152 @@ const CollagePage: React.FC = () => {
     pdf.save('collage.pdf');
   };
 
-  const handleSaveAsPNG = () => {
-    if (!canvasRef.current) return;
+  const handleSaveAsPNG = async () => {
+    if (!collageRef.current) return;
 
-    const canvas = canvasRef.current;
+    const canvas = await html2canvas(collageRef.current, {
+      scale: 2,
+      backgroundColor: 'white',
+    });
+    
     const link = document.createElement('a');
     link.download = 'collage.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
 
+  const renderCollage = () => {
+    if (!selectedTemplate || selectedImages.length === 0) return null;
+
+    const template = templates.find(t => t.id === selectedTemplate);
+    if (!template) return null;
+
+    const gridParts = template.grid.split(' ');
+    const columns = parseInt(gridParts[0].replace('grid-cols-', ''));
+    const rows = parseInt(gridParts[1]?.replace('grid-rows-', '') || '1');
+
+    return (
+      <Box
+        ref={collageRef}
+        sx={{
+          width: isMobile ? '100%' : '70%',
+          aspectRatio: orientation === 'landscape' ? '16/9' : '9/16',
+          backgroundColor: 'white',
+          p: { xs: 1, sm: 2 },
+          boxShadow: 3,
+          touchAction: 'none',
+          overflow: 'hidden',
+          margin: 'auto',
+          '& *': {
+            touchAction: 'none',
+          },
+        }}
+      >
+        <Box
+          sx={{
+            height: '100%',
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: `repeat(${columns}, 1fr)`,
+            gridTemplateRows: `repeat(${rows}, 1fr)`,
+            gap: { xs: '4px', sm: '8px' },
+            touchAction: 'none',
+          }}
+        >
+          {template.positions.map((position, index) => {
+            if (index >= selectedImages.length) return null;
+            const image = selectedImages[index];
+            const [colSpan, rowSpan] = position.split(' ').map(p => parseInt(p.replace(/[^0-9]/g, '')));
+            const imagePosition = imagePositions[image.id] || { x: 0, y: 0, scale: 1, rotation: 0 };
+            
+            return (
+              <Box
+                key={image.id}
+                sx={{
+                  gridColumn: `span ${colSpan}`,
+                  gridRow: `span ${rowSpan}`,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  backgroundColor: '#f0f0f0',
+                  minHeight: { xs: '50px', sm: '100px' },
+                  cursor: isDragging === image.id ? 'grabbing' : 'grab',
+                  borderRadius: `${borderRadius}px`,
+                  touchAction: 'none',
+                }}
+                onMouseDown={(e) => handleMouseDown(image.id, e)}
+                onTouchStart={(e) => handleTouchStart(image.id, e)}
+                onTouchMove={(e) => handleTouchMove(image.id, e)}
+                onTouchEnd={handleTouchEnd}
+              >
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    touchAction: 'none',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: `translate(-50%, -50%) translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imagePosition.scale}) rotate(${imagePosition.rotation}deg)`,
+                      transformOrigin: 'center',
+                      transition: isDragging === image.id ? 'none' : 'transform 0.3s ease',
+                      '&:hover': {
+                        zIndex: 1,
+                      },
+                      willChange: 'transform',
+                      width: '100%',
+                      height: '100%',
+                      touchAction: 'none',
+                    }}
+                    onWheel={(e) => handleWheel(image.id, e)}
+                  >
+                    <img
+                      src={image.url}
+                      alt={image.name}
+                      style={{
+                        width: 'auto',
+                        height: 'auto',
+                        maxWidth: '300%',
+                        maxHeight: '300%',
+                        objectFit: 'contain',
+                        display: 'block',
+                        pointerEvents: 'none',
+                        filter: isDragging === image.id ? 'drop-shadow(0px 4px 8px rgba(0,0,0,0.2))' : 'none',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                      }}
+                    />
+                  </Box>
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+    );
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ px: { xs: 1, sm: 2 } }}>
-      <Box sx={{ textAlign: 'left' }}>
-        <Typography sx={{ py: 2 }} variant="h4" >
+    <Container maxWidth="lg" sx={{ px: { xs: 0.5, sm: 2 }, touchAction: 'none' }}>
+      <Box sx={{ textAlign: 'left', touchAction: 'none' }}>
+        <Typography sx={{ py: { xs: 1, sm: 2 } }} variant="h4" >
           <ViewModuleIcon /> Create Collage
-          <Typography sx={{ py: 0.5, fontSize: 13 }}  >
+          <Typography sx={{ py: { xs: 0.25, sm: 0.5 }, fontSize: { xs: 11, sm: 13 } }}  >
             Select photos from your gallery, choose a template, and create a beautiful collage. Save as PNG or PDF, or print directly.
+            Drag images to position them, use the mouse wheel to zoom, and Alt + mouse wheel to rotate. On mobile, drag with one finger, use two fingers to rotate and zoom.
           </Typography>
         </Typography>
 
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          spacing={2}
+          spacing={{ xs: 1, sm: 2 }}
           sx={{
-            mb: 4,
+            mb: { xs: 2, sm: 4 },
             alignItems: { xs: 'stretch', sm: 'flex-start' }
           }}
         >
@@ -239,6 +517,21 @@ const CollagePage: React.FC = () => {
             >
               <MenuItem value="portrait">Portrait</MenuItem>
               <MenuItem value="landscape">Landscape</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl sx={{ minWidth: { xs: "100%", sm: 200 } }}>
+            <InputLabel>Border Radius</InputLabel>
+            <Select
+              value={borderRadius}
+              label="Border Radius"
+              onChange={handleBorderRadiusChange}
+            >
+              <MenuItem value={0}>None</MenuItem>
+              <MenuItem value={8}>Small</MenuItem>
+              <MenuItem value={16}>Medium</MenuItem>
+              <MenuItem value={24}>Large</MenuItem>
+              <MenuItem value={32}>Extra Large</MenuItem>
             </Select>
           </FormControl>
         </Stack>
@@ -313,10 +606,9 @@ const CollagePage: React.FC = () => {
                       background: '#555',
                     },
                   },
-                  // Prevent horizontal page stretching
                   maxWidth: '100%',
                   boxSizing: 'border-box',
-                  WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+                  WebkitOverflowScrolling: 'touch',
                 }}
               >
                 {selectedImages.map((image) => (
@@ -403,63 +695,111 @@ const CollagePage: React.FC = () => {
         )}
 
         {selectedTemplate && selectedImages.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Preview
-            </Typography>
-            <Paper 
-              elevation={3} 
-              sx={{ 
-                p: isMobile ? 1 : 2, 
-                display: 'flex', 
+          <Dialog
+            open={isEditorOpen}
+            onClose={handleCloseEditor}
+            maxWidth="md"
+            fullWidth
+            fullScreen={isMobile}
+            sx={{
+              '& .MuiDialog-paper': {
+                margin: 0,
+                height: isMobile ? '100%' : '90vh',
+                maxHeight: isMobile ? '100%' : '90vh',
+                overflow: 'hidden',
+                width: isMobile ? '100%' : '90vw',
+                maxWidth: isMobile ? '100%' : '90vw',
+                display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2,
-                backgroundColor: '#f5f5f5',
-                overflow: 'hidden'
+              },
+            }}
+          >
+            <DialogContent 
+              sx={{ 
+                p: 0, 
+                flex: 1,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                '&.MuiDialogContent-root': {
+                  padding: 0,
+                }
               }}
             >
-              <canvas
-                ref={canvasRef}
-                style={{
-                  border: '1px solid #ccc',
-                  backgroundColor: 'white',
-                  maxWidth: '100%',
-                  height: 'auto'
+              <Box
+                sx={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  bgcolor: '#f5f5f5',
+                  overflow: 'hidden',
                 }}
-              />
-              <Stack 
-                direction={isMobile ? "column" : "row"} 
-                spacing={2} 
-                sx={{ width: '100%', justifyContent: 'center' }}
               >
-                <Button
-                  variant="contained"
-                  startIcon={<PrintIcon />}
-                  onClick={handlePrint}
-                  fullWidth={isMobile}
+                <Box
+                  sx={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: { xs: 1, sm: 2 },
+                    overflow: 'hidden',
+                    position: 'relative',
+                    zIndex: 1,
+                  }}
                 >
-                  Print
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<PictureAsPdfIcon />}
-                  onClick={handleSaveAsPDF}
-                  fullWidth={isMobile}
+                  {renderCollage()}
+                </Box>
+                <Box 
+                  sx={{ 
+                    p: { xs: 1, sm: 2 }, 
+                    bgcolor: 'background.paper',
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    position: 'relative',
+                    zIndex: 2,
+                  }}
                 >
-                  Save as PDF
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<ImageIcon />}
-                  onClick={handleSaveAsPNG}
-                  fullWidth={isMobile}
-                >
-                  Save as PNG
-                </Button>
-              </Stack>
-            </Paper>
-          </Box>
+                  <Stack 
+                    direction={isMobile ? "column" : "row"} 
+                    spacing={{ xs: 1, sm: 2 }} 
+                    sx={{ width: '100%', justifyContent: 'center' }}
+                  >
+                    <Button
+                      variant="contained"
+                      startIcon={<PrintIcon />}
+                      onClick={handlePrint}
+                      fullWidth={isMobile}
+                    >
+                      Print
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<PictureAsPdfIcon />}
+                      onClick={handleSaveAsPDF}
+                      fullWidth={isMobile}
+                    >
+                      Save as PDF
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<ImageIcon />}
+                      onClick={handleSaveAsPNG}
+                      fullWidth={isMobile}
+                    >
+                      Save as PNG
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      onClick={handleCloseEditor}
+                      fullWidth={isMobile}
+                    >
+                      Close
+                    </Button>
+                  </Stack>
+                </Box>
+              </Box>
+            </DialogContent>
+          </Dialog>
         )}
       </Box>
     </Container>
